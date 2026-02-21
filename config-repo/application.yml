@@ -1,0 +1,24 @@
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO
+    org.springframework.cloud.gateway: INFO
+    org.hibernate.SQL: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+# Security resource server (TEMPORARILY DISABLED FOR TESTING)
+# TODO: Re-enable when Keycloak is running on port 8081
+#spring:
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          issuer-uri: http://localhost:8081/realms/orderly

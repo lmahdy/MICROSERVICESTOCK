@@ -1,0 +1,29 @@
+server:
+  port: 8094
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:storedb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka

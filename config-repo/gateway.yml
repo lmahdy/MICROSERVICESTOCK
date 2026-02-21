@@ -1,0 +1,54 @@
+spring:
+  cloud:
+    gateway:
+      default-filters:
+        - RemoveRequestHeader=Cookie
+        - RemoveRequestHeader=Set-Cookie
+      routes:
+        - id: users
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+        - id: stores
+          uri: lb://store-service
+          predicates:
+            - Path=/api/stores/**
+        - id: products
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+        - id: orders
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+        - id: deliveries
+          uri: lb://delivery-service
+          predicates:
+            - Path=/api/deliveries/**
+        - id: complaints
+          uri: lb://complaint-service
+          predicates:
+            - Path=/api/complaints/**
+        - id: notifications
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOriginPatterns: "*"
+            allowedHeaders: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowCredentials: true
+        add-to-simple-url-handler-mapping: true
+server:
+  port: 9016
+
+springdoc:
+  api-docs:
+    enabled: false
