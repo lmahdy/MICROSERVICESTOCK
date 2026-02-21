@@ -1,0 +1,41 @@
+# ===== Node =====
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Java / Maven / Gradle =====
+target/
+**/target/
+build/
+**/build/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ===== IDE =====
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.sts4-cache/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== Logs & temp =====
+*.log
+*.err
+
+# ===== Env =====
+.env
+**/.env
