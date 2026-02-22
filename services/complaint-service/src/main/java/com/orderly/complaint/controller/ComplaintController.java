@@ -2,6 +2,7 @@ package com.orderly.complaint.controller;
 
 import com.orderly.complaint.dto.ComplaintRequest;
 import com.orderly.complaint.dto.ComplaintResponse;
+import com.orderly.complaint.messaging.OrderEventDTO;
 import com.orderly.complaint.model.ComplaintStatus;
 import com.orderly.complaint.service.ComplaintService;
 import jakarta.validation.Valid;
@@ -27,6 +28,14 @@ public class ComplaintController {
     @GetMapping("/client/{clientId}")
     public List<ComplaintResponse> byClient(@PathVariable Long clientId) { return service.byClient(clientId); }
 
+    /**
+     * ASYNCHRONOUS — RabbitMQ
+     * Returns orders that were received by complaint-service via RabbitMQ from order-service.
+     * Create an order (POST /api/orders) → this list will grow automatically!
+     */
+    @GetMapping("/received-orders")
+    public List<OrderEventDTO> receivedOrders() { return service.getReceivedOrders(); }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ComplaintResponse create(@Valid @RequestBody ComplaintRequest request) { return service.create(request); }
@@ -41,3 +50,4 @@ public class ComplaintController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) { service.delete(id); }
 }
+
