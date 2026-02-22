@@ -16,6 +16,12 @@ spring:
       ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
+  # RabbitMQ - Asynchronous messaging
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
 
 springdoc:
   api-docs:
@@ -27,3 +33,4 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
+

@@ -1,5 +1,6 @@
 package com.orderly.order.controller;
 
+import com.orderly.order.client.ProductDTO;
 import com.orderly.order.dto.OrderRequest;
 import com.orderly.order.dto.OrderResponse;
 import com.orderly.order.model.OrderStatus;
@@ -34,6 +35,15 @@ public class OrderController {
         return orderService.findByClient(clientId);
     }
 
+    /**
+     * SYNCHRONOUS FEIGN — calls product-service to get product details for this order.
+     * Demonstrates inter-service communication: Order Service → Product Service via OpenFeign.
+     */
+    @GetMapping("/{id}/products")
+    public List<ProductDTO> getOrderProducts(@PathVariable Long id) {
+        return orderService.getProductsForOrder(id);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse create(@Valid @RequestBody OrderRequest request) {
@@ -56,3 +66,4 @@ public class OrderController {
         orderService.delete(id);
     }
 }
+
