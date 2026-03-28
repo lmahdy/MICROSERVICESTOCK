@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,13 +25,17 @@ public class ComplaintService {
     private static final Logger log = LoggerFactory.getLogger(ComplaintService.class);
 
     private final ComplaintRepository repository;
-
-    // In-memory cache for orders received via RabbitMQ
-    private final List<OrderEventDTO> receivedOrders = new ArrayList<>();
+    private final List<OrderEventDTO> receivedOrders = Collections.synchronizedList(new ArrayList<>());
 
     public ComplaintService(ComplaintRepository repository) { this.repository = repository; }
 
-    public List<ComplaintResponse> findAll() { return repository.findAll().stream().map(ComplaintMapper::toResponse).collect(Collectors.toList()); }
+    public List<OrderEventDTO> getReceivedOrders() {
+        return List.copyOf(receivedOrders);
+    }
+
+    public List<ComplaintResponse> findAll() {
+        return repository.findAll().stream().map(ComplaintMapper::toResponse).collect(Collectors.toList());
+    }
 
     public ComplaintResponse findById(Long id) {
         Complaint c = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Complaint " + id + " not found"));
@@ -74,21 +79,21 @@ public class ComplaintService {
 
     /**
      * Called by OrderConsumer when a new order event arrives from RabbitMQ.
-     * Stores the event in memory and logs it (simulates business processing).
+     * AUTO-CREATES a complaint record in the database for tracking purposes.
      */
     public void receiveOrderEvent(OrderEventDTO event) {
-        log.info("[RABBITMQ] Processing order event in ComplaintService: {}", event);
-        receivedOrders.add(event);
-        log.info("[RABBITMQ] Order {} added to received list. Total received: {}", event.getOrderId(), receivedOrders.size());
-        // In a real system: could auto-create a tracking complaint, send notification, etc.
-    }
+        log.info("[RABBITMQ] Processing order event in ComplaintService: orderId={}", event.getOrderId());
 
-    /**
-     * Returns all order events received via RabbitMQ (from order-service).
-     * Endpoint: GET /api/complaints/received-orders
-     */
-    public List<OrderEventDTO> getReceivedOrders() {
-        return receivedOrders;
+        receivedOrders.add(event);
+
+        // Auto-create a complaint record to track the new order
+        Complaint complaint = new Complaint();
+        complaint.setOrderId(event.getOrderId());
+        complaint.setClientId(event.getClientId());
+        complaint.setDescription("Order #" + event.getOrderId() + " placed — amount: " + event.getTotalAmount());
+        complaint.setStatus(ComplaintStatus.OPEN);
+        repository.save(complaint);
+
+        log.info("[RABBITMQ] Auto-complaint created for order {} — complaint id saved", event.getOrderId());
     }
 }
-

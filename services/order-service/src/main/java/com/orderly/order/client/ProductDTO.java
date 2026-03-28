@@ -1,11 +1,13 @@
 package com.orderly.order.client;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 
 /**
  * DTO used to receive product data from product-service via OpenFeign.
  * NOT persisted in the order-service database — only used for data transfer.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProductDTO {
 
     private Long id;

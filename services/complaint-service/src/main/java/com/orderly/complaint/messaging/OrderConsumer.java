@@ -24,11 +24,11 @@ public class OrderConsumer {
         this.complaintService = complaintService;
     }
 
-    @RabbitListener(queues = RabbitMQConfig.ORDER_CREATED_QUEUE,
+    @RabbitListener(queues = RabbitMQConfig.ORDER_CREATED_COMPLAINT_QUEUE,
                     containerFactory = "rabbitListenerContainerFactory")
     public void receiveOrderEvent(OrderEventDTO orderEvent) {
-        log.info("[RABBITMQ] Order event received from queue '{}': {}", 
-                 RabbitMQConfig.ORDER_CREATED_QUEUE, orderEvent);
+        log.info("[RABBITMQ] Order event received from queue '{}': {}",
+                 RabbitMQConfig.ORDER_CREATED_COMPLAINT_QUEUE, orderEvent);
         complaintService.receiveOrderEvent(orderEvent);
     }
 }

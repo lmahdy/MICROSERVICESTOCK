@@ -6,7 +6,8 @@ import { AppModule } from './app.module';
 import { registerWithEureka } from './eureka';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  // CORS is handled by Spring Cloud Gateway — do NOT enable here to avoid duplicate headers
+  const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const config = new DocumentBuilder()

@@ -2,6 +2,7 @@ package com.orderly.order.service;
 
 import com.orderly.order.client.ProductClient;
 import com.orderly.order.client.ProductDTO;
+import com.orderly.order.dto.OrderLineRequest;
 import com.orderly.order.dto.OrderRequest;
 import com.orderly.order.dto.OrderResponse;
 import com.orderly.order.exception.ResourceNotFoundException;
@@ -9,6 +10,7 @@ import com.orderly.order.mapper.OrderMapper;
 import com.orderly.order.messaging.OrderEventDTO;
 import com.orderly.order.messaging.OrderProducer;
 import com.orderly.order.model.Order;
+import com.orderly.order.model.OrderLine;
 import com.orderly.order.model.OrderStatus;
 import com.orderly.order.repository.OrderRepository;
 import org.slf4j.Logger;
@@ -16,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,8 +56,7 @@ public class OrderService {
 
     /**
      * SYNCHRONOUS — OpenFeign
-     * Order Service calls Product Service directly to get product details.
-     * The order must contain at least one item with a productId.
+     * Returns product details for all items in an order.
      */
     public List<ProductDTO> getProductsForOrder(Long orderId) {
         Order order = repository.findById(orderId)
@@ -71,15 +74,44 @@ public class OrderService {
     }
 
     /**
-     * CREATE — saves the order, then:
-     * 1. Sends event to RabbitMQ asynchronously (complaint-service will receive it)
+     * CREATE — validates each product via Feign, auto-calculates totalAmount,
+     * then saves the order and publishes a RabbitMQ event.
+     * If RabbitMQ is down → logs warning but does NOT fail the order.
      */
     public OrderResponse create(OrderRequest request) {
-        Order order = OrderMapper.toEntity(request);
-        repository.save(order);
-        log.info("Order {} saved to database", order.getId());
+        log.info("[ORDER] Creating order for client {} with {} items", request.getClientId(), request.getItems().size());
 
-        // ASYNCHRONOUS — RabbitMQ: publish event after saving
+        // 1. Validate products via Feign and calculate totalAmount
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        List<OrderLine> lines = new ArrayList<>();
+
+        for (OrderLineRequest item : request.getItems()) {
+            // This may throw ResponseStatusException(400) if product not found
+            ProductDTO product = productClient.getProductById(item.getProductId());
+            log.info("[FEIGN] Product {} '{}' price={}", product.getId(), product.getName(), product.getPrice());
+
+            BigDecimal lineTotal = product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+            totalAmount = totalAmount.add(lineTotal);
+
+            OrderLine line = new OrderLine();
+            line.setProductId(item.getProductId());
+            line.setQuantity(item.getQuantity());
+            line.setUnitPrice(product.getPrice());
+            lines.add(line);
+        }
+
+        // 2. Build and save order
+        Order order = new Order();
+        order.setClientId(request.getClientId());
+        order.setStoreId(request.getStoreId());
+        order.setDeliveryAddress(request.getDeliveryAddress());
+        order.setTotalAmount(totalAmount);
+        order.setItems(lines);
+        repository.save(order);
+
+        log.info("[ORDER] Order {} saved — totalAmount={}", order.getId(), totalAmount);
+
+        // 3. ASYNCHRONOUS — RabbitMQ: publish event (non-blocking, failure is logged)
         try {
             OrderEventDTO event = new OrderEventDTO(
                     order.getId(),
@@ -90,8 +122,7 @@ public class OrderService {
             );
             orderProducer.sendOrderCreatedEvent(event);
         } catch (Exception e) {
-            // Log but don't fail the order creation if RabbitMQ is unavailable
-            log.warn("[RABBITMQ] Could not publish order event: {}", e.getMessage());
+            log.warn("[RABBITMQ] Could not publish order event — order was saved successfully: {}", e.getMessage());
         }
 
         return OrderMapper.toResponse(order);
@@ -99,7 +130,9 @@ public class OrderService {
 
     public OrderResponse update(Long id, OrderRequest request) {
         Order order = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order " + id + " not found"));
-        OrderMapper.update(order, request);
+        order.setClientId(request.getClientId());
+        order.setStoreId(request.getStoreId());
+        order.setDeliveryAddress(request.getDeliveryAddress());
         repository.save(order);
         return OrderMapper.toResponse(order);
     }
@@ -108,6 +141,7 @@ public class OrderService {
         Order order = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order " + id + " not found"));
         order.setStatus(status);
         repository.save(order);
+        log.info("[ORDER] Order {} status updated to {}", id, status);
         return OrderMapper.toResponse(order);
     }
 
@@ -118,4 +152,3 @@ public class OrderService {
         repository.deleteById(id);
     }
 }
-

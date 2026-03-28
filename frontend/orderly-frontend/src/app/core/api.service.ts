@@ -1,28 +1,55 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { environment } from '../environments/environment';
+import { Observable } from 'rxjs';
 
-const API = 'http://localhost:9016';
+const G = environment.gateway;
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  users() {
-    return this.http.get(`${API}/api/users`);
+  // ── Users ──────────────────────────────────────────────
+  getUsers(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/users`); }
+  createUser(body: any): Observable<any> { return this.http.post<any>(`${G}/api/users`, body); }
+  deleteUser(id: number): Observable<any> { return this.http.delete(`${G}/api/users/${id}`); }
+
+  // ── Stores ─────────────────────────────────────────────
+  getStores(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/stores`); }
+  getStore(id: number): Observable<any> { return this.http.get<any>(`${G}/api/stores/${id}`); }
+  createStore(body: any): Observable<any> { return this.http.post<any>(`${G}/api/stores`, body); }
+  updateStore(id: number, body: any): Observable<any> { return this.http.put<any>(`${G}/api/stores/${id}`, body); }
+  deleteStore(id: number): Observable<any> { return this.http.delete(`${G}/api/stores/${id}`); }
+
+  // ── Products ───────────────────────────────────────────
+  getProducts(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/products`); }
+  getProductsByStore(storeId: number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/products/store/${storeId}`); }
+  createProduct(body: any): Observable<any> { return this.http.post<any>(`${G}/api/products`, body); }
+  deleteProduct(id: number): Observable<any> { return this.http.delete(`${G}/api/products/${id}`); }
+
+  // ── Orders ─────────────────────────────────────────────
+  getOrders(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/orders`); }
+  getOrdersByClient(clientId: number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/orders/client/${clientId}`); }
+  createOrder(body: any): Observable<any> { return this.http.post<any>(`${G}/api/orders`, body); }
+  updateOrderStatus(id: number, status: string): Observable<any> {
+    return this.http.patch<any>(`${G}/api/orders/${id}/status/${status}`, null);
   }
-  stores() {
-    return this.http.get(`${API}/api/stores`);
+
+  // ── Deliveries ─────────────────────────────────────────
+  getDeliveries(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/deliveries`); }
+  getDeliveryByOrder(orderId: number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/deliveries/order/${orderId}`); }
+  createDelivery(body: any): Observable<any> { return this.http.post<any>(`${G}/api/deliveries`, body); }
+  updateDeliveryStatus(id: number, status: string): Observable<any> {
+    return this.http.patch<any>(`${G}/api/deliveries/${id}/status/${status}`, null);
   }
-  products() {
-    return this.http.get(`${API}/api/products`);
+
+  // ── Complaints ─────────────────────────────────────────
+  getComplaints(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/complaints`); }
+  createComplaint(body: any): Observable<any> { return this.http.post<any>(`${G}/api/complaints`, body); }
+  updateComplaintStatus(id: number, status: string): Observable<any> {
+    return this.http.patch<any>(`${G}/api/complaints/${id}/status/${status}`, null);
   }
-  orders() {
-    return this.http.get(`${API}/api/orders`);
-  }
-  deliveries() {
-    return this.http.get(`${API}/api/deliveries`);
-  }
-  complaints() {
-    return this.http.get(`${API}/api/complaints`);
-  }
+
+  // ── Notifications ──────────────────────────────────────
+  getNotifications(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/notifications`); }
 }

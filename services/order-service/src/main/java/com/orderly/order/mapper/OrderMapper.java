@@ -12,33 +12,13 @@ import java.util.stream.Collectors;
 public class OrderMapper {
     private OrderMapper() {}
 
+    /** Lightweight entity creation — totalAmount set separately after Feign calls */
     public static Order toEntity(OrderRequest request) {
         Order order = new Order();
         order.setClientId(request.getClientId());
         order.setStoreId(request.getStoreId());
         order.setDeliveryAddress(request.getDeliveryAddress());
-        order.setTotalAmount(request.getTotalAmount());
-        if (request.getStatus() != null) {
-            order.setStatus(request.getStatus());
-        }
-        if (request.getItems() != null) {
-            order.setItems(request.getItems().stream().map(OrderMapper::toLine).collect(Collectors.toList()));
-        }
         return order;
-    }
-
-    public static void update(Order order, OrderRequest request) {
-        order.setClientId(request.getClientId());
-        order.setStoreId(request.getStoreId());
-        order.setDeliveryAddress(request.getDeliveryAddress());
-        order.setTotalAmount(request.getTotalAmount());
-        if (request.getStatus() != null) {
-            order.setStatus(request.getStatus());
-        }
-        order.getItems().clear();
-        if (request.getItems() != null) {
-            order.getItems().addAll(request.getItems().stream().map(OrderMapper::toLine).toList());
-        }
     }
 
     public static OrderResponse toResponse(Order order) {
@@ -62,11 +42,11 @@ public class OrderMapper {
                 .build();
     }
 
-    private static OrderLine toLine(OrderLineRequest req) {
+    public static OrderLine toLine(OrderLineRequest req) {
         OrderLine line = new OrderLine();
         line.setProductId(req.getProductId());
         line.setQuantity(req.getQuantity());
-        line.setUnitPrice(req.getUnitPrice());
+        // unitPrice set externally from Feign call
         return line;
     }
 }

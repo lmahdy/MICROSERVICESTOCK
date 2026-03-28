@@ -1,26 +1,26 @@
 package com.orderly.order.client;
 
-import feign.codec.Decoder;
-import feign.codec.Encoder;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
+import feign.codec.ErrorDecoder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 /**
- * Feign configuration using Jackson for Spring Boot 3+ compatibility.
- * Fixes serialization issues with the default Feign encoder/decoder.
+ * Feign configuration — used only by @FeignClient(configuration = FeignConfig.class).
+ * Do NOT add @Configuration here; Spring Cloud OpenFeign registers these beans per-client.
+ * Default Spring decoder/encoder handles Jackson deserialization (ignores unknown fields).
  */
-@Configuration
 public class FeignConfig {
 
     @Bean
-    public Decoder feignDecoder() {
-        return new JacksonDecoder();
-    }
-
-    @Bean
-    public Encoder feignEncoder() {
-        return new JacksonEncoder();
+    public ErrorDecoder feignErrorDecoder() {
+        return (methodKey, response) -> {
+            if (response.status() == 404) {
+                return new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Product not found — please use a valid productId");
+            }
+            return new ResponseStatusException(HttpStatus.valueOf(response.status()),
+                    "Error calling product-service: " + response.reason());
+        };
     }
 }
