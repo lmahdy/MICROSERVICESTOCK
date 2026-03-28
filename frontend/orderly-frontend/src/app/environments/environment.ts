@@ -1,4 +1,3 @@
 export const environment = {
-  keycloakClientId: 'orderly-frontend',
-  keycloakClientSecret: '' // set secret only if the client is confidential
+  gateway: 'http://localhost:9016'
 };

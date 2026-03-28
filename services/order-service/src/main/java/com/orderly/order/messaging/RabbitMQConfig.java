@@ -1,5 +1,6 @@
 package com.orderly.order.messaging;
 
+import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -9,27 +10,24 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * RabbitMQ configuration for the Producer side (order-service).
- * Does NOT declare the queue — that is the consumer's responsibility.
- * Only configures RabbitTemplate with JSON converter.
+ * Uses a fanout exchange so multiple consumers (complaint-service, notification-service)
+ * each receive every ORDER_CREATED event.
  */
 @Configuration
 public class RabbitMQConfig {
 
-    // Queue name — must match the name declared by the consumer (complaint-service)
-    public static final String ORDER_CREATED_QUEUE = "ORDER_CREATED_QUEUE";
+    public static final String ORDER_CREATED_EXCHANGE = "ORDER_CREATED_EXCHANGE";
 
-    /**
-     * JSON converter: serializes Java objects to JSON before sending to RabbitMQ.
-     */
+    @Bean
+    public FanoutExchange orderCreatedExchange() {
+        return new FanoutExchange(ORDER_CREATED_EXCHANGE, true, false);
+    }
+
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 
-    /**
-     * RabbitTemplate configured with JSON converter.
-     * Used by OrderProducer to send messages.
-     */
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
                                           MessageConverter converter) {

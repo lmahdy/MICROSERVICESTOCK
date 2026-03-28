@@ -13,4 +13,10 @@ public class ErukaaaaApplication {
         SpringApplication.run(ErukaaaaApplication.class, args);
     }
 
+
+
 }
+
+
+
+

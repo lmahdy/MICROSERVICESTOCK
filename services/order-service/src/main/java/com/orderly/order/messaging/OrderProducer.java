@@ -29,8 +29,8 @@ public class OrderProducer {
      */
     public void sendOrderCreatedEvent(OrderEventDTO event) {
         try {
-            rabbitTemplate.convertAndSend(RabbitMQConfig.ORDER_CREATED_QUEUE, event);
-            log.info("[RABBITMQ] Order event sent to queue '{}': {}", RabbitMQConfig.ORDER_CREATED_QUEUE, event);
+            rabbitTemplate.convertAndSend(RabbitMQConfig.ORDER_CREATED_EXCHANGE, "", event);
+            log.info("[RABBITMQ] Order event sent to exchange '{}': {}", RabbitMQConfig.ORDER_CREATED_EXCHANGE, event);
         } catch (AmqpException e) {
             log.error("[RABBITMQ] Failed to send order event: {}", e.getMessage());
             throw e;

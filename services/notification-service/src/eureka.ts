@@ -19,7 +19,7 @@ export function registerWithEureka(port: number) {
       maxRetries: 5
     }
   });
-  client.start((error) => {
+  client.start((error: any) => {
     if (error) {
       console.error('Eureka registration failed', error);
     } else {

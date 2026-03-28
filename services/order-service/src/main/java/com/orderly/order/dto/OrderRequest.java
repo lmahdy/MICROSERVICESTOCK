@@ -1,11 +1,10 @@
 package com.orderly.order.dto;
 
-import com.orderly.order.model.OrderStatus;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -14,10 +13,10 @@ public class OrderRequest {
     private Long clientId;
     @NotNull
     private Long storeId;
-    @NotNull
-    private BigDecimal totalAmount;
+    /** Delivery address for the order */
     private String deliveryAddress;
+    /** Items: product + quantity. totalAmount is AUTO-CALCULATED via Feign from product-service. */
     @Valid
+    @NotEmpty
     private List<OrderLineRequest> items;
-    private OrderStatus status;
 }
