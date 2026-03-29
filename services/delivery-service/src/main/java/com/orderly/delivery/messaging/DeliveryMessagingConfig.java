@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -15,13 +16,22 @@ import java.util.Map;
 
 /**
  * RabbitMQ configuration and event publisher for delivery-service.
- * Publishes DELIVERY_DELIVERED events to notify notification-service.
+ * Uses a topic exchange so notification-service can subscribe to specific delivery events.
+ * Publishes events for ALL delivery status transitions.
  */
 @Configuration
 public class DeliveryMessagingConfig {
 
     private static final Logger log = LoggerFactory.getLogger(DeliveryMessagingConfig.class);
+
+    public static final String DELIVERY_EVENTS_EXCHANGE = "DELIVERY_EVENTS_EXCHANGE";
+    // Legacy queue kept for backward compatibility
     public static final String DELIVERY_DELIVERED_QUEUE = "DELIVERY_DELIVERED_QUEUE";
+
+    @Bean
+    public TopicExchange deliveryEventsExchange() {
+        return new TopicExchange(DELIVERY_EVENTS_EXCHANGE, true, false);
+    }
 
     @Bean
     public Queue deliveryDeliveredQueue() {
@@ -42,20 +52,37 @@ public class DeliveryMessagingConfig {
     }
 
     /**
-     * Publishes a delivery delivered event to RabbitMQ.
-     * If RabbitMQ is unavailable, logs warning and continues.
+     * Publishes a delivery status event to the topic exchange.
+     * routing key format: delivery.{STATUS}
+     * Also publishes to legacy DELIVERY_DELIVERED_QUEUE for backward compat when DELIVERED.
      */
-    public static void publishDeliveryEvent(RabbitTemplate rabbitTemplate, Long orderId, Long courierId) {
+    public static void publishDeliveryEvent(RabbitTemplate rabbitTemplate,
+                                             String status,
+                                             Long deliveryId,
+                                             Long orderId,
+                                             Long courierId,
+                                             Long clientId) {
         try {
             Map<String, Object> event = Map.of(
+                    "deliveryId", deliveryId,
                     "orderId", orderId,
                     "courierId", courierId,
-                    "status", "DELIVERED"
+                    "clientId", clientId != null ? clientId : 0L,
+                    "status", status
             );
-            rabbitTemplate.convertAndSend(DELIVERY_DELIVERED_QUEUE, event);
-            log.info("[RABBITMQ] DELIVERY_DELIVERED event sent for orderId={}", orderId);
+
+            // Publish to topic exchange with routing key
+            String routingKey = "delivery." + status;
+            rabbitTemplate.convertAndSend(DELIVERY_EVENTS_EXCHANGE, routingKey, event);
+            log.info("[RABBITMQ] Delivery event sent: exchange={}, key={}, orderId={}", DELIVERY_EVENTS_EXCHANGE, routingKey, orderId);
+
+            // Also publish to legacy queue for backward compat
+            if ("DELIVERED".equals(status)) {
+                rabbitTemplate.convertAndSend(DELIVERY_DELIVERED_QUEUE, event);
+                log.info("[RABBITMQ] Legacy DELIVERY_DELIVERED event also sent to queue");
+            }
         } catch (AmqpException e) {
-            log.warn("[RABBITMQ] Could not send DELIVERY_DELIVERED event: {}", e.getMessage());
+            log.warn("[RABBITMQ] Could not send delivery event: {}", e.getMessage());
         }
     }
 }

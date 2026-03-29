@@ -13,6 +13,8 @@ public class UserRequest {
     @Email
     @NotBlank
     private String email;
+    @NotBlank
+    private String password;
     private String phone;
     private String address;
     private String externalId;

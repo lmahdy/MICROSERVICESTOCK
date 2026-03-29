@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateNotificationDto {
   @ApiProperty()
@@ -17,10 +17,45 @@ export class CreateNotificationDto {
   @IsOptional()
   userId?: string;
 
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  recipientRole?: string;
+
   @ApiProperty({ required: false, default: 'INFO' })
   @IsString()
   @IsOptional()
   type?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  relatedEntityType?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  relatedEntityId?: string;
+
+  @ApiProperty({ required: false, default: false })
+  @IsBoolean()
+  @IsOptional()
+  read?: boolean;
 }
 
-export class UpdateNotificationDto extends CreateNotificationDto {}
+export class UpdateNotificationDto {
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  message?: string;
+
+  @ApiProperty({ required: false })
+  @IsBoolean()
+  @IsOptional()
+  read?: boolean;
+}

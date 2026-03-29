@@ -12,6 +12,7 @@ public class DeliveryResponse {
     Long id;
     Long orderId;
     Long courierId;
+    Long clientId;
     DeliveryStatus status;
     String estimatedTime;
     String notes;

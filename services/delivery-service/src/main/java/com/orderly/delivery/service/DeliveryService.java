@@ -55,7 +55,27 @@ public class DeliveryService {
 
     public DeliveryResponse create(DeliveryRequest request) {
         Delivery d = DeliveryMapper.toEntity(request);
+
+        // If clientId not provided, try to look it up from order-service
+        if (d.getClientId() == null) {
+            try {
+                String url = "http://localhost:9016/api/orders/" + d.getOrderId();
+                var response = restTemplate.getForObject(url, java.util.Map.class);
+                if (response != null && response.get("clientId") != null) {
+                    d.setClientId(Long.parseLong(response.get("clientId").toString()));
+                    log.info("[DELIVERY] Auto-resolved clientId={} from order {}", d.getClientId(), d.getOrderId());
+                }
+            } catch (Exception e) {
+                log.warn("[DELIVERY] Could not resolve clientId from order-service: {}", e.getMessage());
+            }
+        }
+
         repository.save(d);
+
+        // Publish ASSIGNED event
+        DeliveryMessagingConfig.publishDeliveryEvent(
+                rabbitTemplate, "ASSIGNED", d.getId(), d.getOrderId(), d.getCourierId(), d.getClientId());
+
         return DeliveryMapper.toResponse(d);
     }
 
@@ -68,8 +88,9 @@ public class DeliveryService {
 
     /**
      * Updates delivery status.
+     * For ALL transitions: publishes async event to RabbitMQ.
      * When DELIVERED:
-     *   1. Publishes DELIVERY_DELIVERED event to RabbitMQ (notification-service will notify client)
+     *   1. Publishes DELIVERY_DELIVERED event
      *   2. Calls order-service via Gateway to mark order as DELIVERED
      */
     public DeliveryResponse updateStatus(Long id, DeliveryStatus status) {
@@ -78,11 +99,12 @@ public class DeliveryService {
         repository.save(d);
         log.info("[DELIVERY] Delivery {} status updated to {}", id, status);
 
-        if (status == DeliveryStatus.DELIVERED) {
-            // 1. Publish async event for notification
-            DeliveryMessagingConfig.publishDeliveryEvent(rabbitTemplate, d.getOrderId(), d.getCourierId());
+        // Publish event for EVERY status transition
+        DeliveryMessagingConfig.publishDeliveryEvent(
+                rabbitTemplate, status.name(), d.getId(), d.getOrderId(), d.getCourierId(), d.getClientId());
 
-            // 2. Update order status to DELIVERED via Gateway
+        if (status == DeliveryStatus.DELIVERED) {
+            // Also update order status to DELIVERED via Gateway
             try {
                 String url = "http://localhost:9016/api/orders/" + d.getOrderId() + "/status/DELIVERED";
                 restTemplate.exchange(url, HttpMethod.PATCH, HttpEntity.EMPTY, String.class);

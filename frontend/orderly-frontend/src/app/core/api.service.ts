@@ -11,6 +11,8 @@ export class ApiService {
 
   // ── Users ──────────────────────────────────────────────
   getUsers(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/users`); }
+  getUserByEmail(email: string): Observable<any> { return this.http.get<any>(`${G}/api/users/email/${email}`); }
+  loginUser(body: { email: string, password: string }): Observable<any> { return this.http.post<any>(`${G}/api/users/login`, body); }
   createUser(body: any): Observable<any> { return this.http.post<any>(`${G}/api/users`, body); }
   deleteUser(id: number): Observable<any> { return this.http.delete(`${G}/api/users/${id}`); }
 
@@ -38,6 +40,7 @@ export class ApiService {
   // ── Deliveries ─────────────────────────────────────────
   getDeliveries(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/deliveries`); }
   getDeliveryByOrder(orderId: number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/deliveries/order/${orderId}`); }
+  getDeliveriesByCourier(courierId: number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/deliveries/courier/${courierId}`); }
   createDelivery(body: any): Observable<any> { return this.http.post<any>(`${G}/api/deliveries`, body); }
   updateDeliveryStatus(id: number, status: string): Observable<any> {
     return this.http.patch<any>(`${G}/api/deliveries/${id}/status/${status}`, null);
@@ -52,4 +55,8 @@ export class ApiService {
 
   // ── Notifications ──────────────────────────────────────
   getNotifications(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/notifications`); }
+  getNotificationsByUser(userId: number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/notifications/user/${userId}`); }
+  getUnreadCount(userId: number): Observable<any> { return this.http.get<any>(`${G}/api/notifications/user/${userId}/unread-count`); }
+  markNotificationRead(id: string): Observable<any> { return this.http.patch<any>(`${G}/api/notifications/${id}/read`, null); }
+  markAllRead(userId: number): Observable<any> { return this.http.patch<any>(`${G}/api/notifications/user/${userId}/read-all`, null); }
 }

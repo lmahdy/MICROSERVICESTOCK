@@ -11,6 +11,7 @@ public class DeliveryMapper {
         Delivery d = new Delivery();
         d.setOrderId(request.getOrderId());
         d.setCourierId(request.getCourierId());
+        d.setClientId(request.getClientId());
         d.setEstimatedTime(request.getEstimatedTime());
         d.setNotes(request.getNotes());
         if (request.getStatus() != null) d.setStatus(request.getStatus());
@@ -20,6 +21,7 @@ public class DeliveryMapper {
     public static void update(Delivery d, DeliveryRequest request) {
         d.setOrderId(request.getOrderId());
         d.setCourierId(request.getCourierId());
+        if (request.getClientId() != null) d.setClientId(request.getClientId());
         d.setEstimatedTime(request.getEstimatedTime());
         d.setNotes(request.getNotes());
         if (request.getStatus() != null) d.setStatus(request.getStatus());
@@ -30,6 +32,7 @@ public class DeliveryMapper {
                 .id(d.getId())
                 .orderId(d.getOrderId())
                 .courierId(d.getCourierId())
+                .clientId(d.getClientId())
                 .status(d.getStatus())
                 .estimatedTime(d.getEstimatedTime())
                 .notes(d.getNotes())

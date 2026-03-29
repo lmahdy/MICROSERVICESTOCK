@@ -1,5 +1,6 @@
 package com.orderly.user.service;
 
+import com.orderly.user.dto.LoginRequest;
 import com.orderly.user.dto.UserRequest;
 import com.orderly.user.dto.UserResponse;
 import com.orderly.user.exception.ResourceNotFoundException;
@@ -29,6 +30,22 @@ public class UserService {
     public UserResponse findById(Long id) {
         User user = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User " + id + " not found"));
+        return UserMapper.toResponse(user);
+    }
+
+    public UserResponse findByEmail(String email) {
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User with email " + email + " not found"));
+        return UserMapper.toResponse(user);
+    }
+
+    /** Authenticate user by email + password */
+    public UserResponse login(LoginRequest request) {
+        User user = repository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("No account found with email: " + request.getEmail()));
+        if (!user.getPassword().equals(request.getPassword())) {
+            throw new IllegalArgumentException("Invalid password");
+        }
         return UserMapper.toResponse(user);
     }
 

@@ -1,12 +1,14 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './components/login.component';
 import { LayoutComponent } from './components/layout.component';
+import { authGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   {
     path: 'admin',
     component: LayoutComponent,
+    canActivate: [authGuard],
     children: [
       { path: 'dashboard', loadComponent: () => import('./components/admin-dashboard.component').then(m => m.AdminDashboardComponent) },
       { path: 'stores', loadComponent: () => import('./components/admin-stores.component').then(m => m.AdminStoresComponent) },
@@ -21,12 +23,22 @@ export const routes: Routes = [
   {
     path: 'client',
     component: LayoutComponent,
+    canActivate: [authGuard],
     children: [
       { path: 'stores', loadComponent: () => import('./components/client-stores.component').then(m => m.ClientStoresComponent) },
       { path: 'products', loadComponent: () => import('./components/client-products.component').then(m => m.ClientProductsComponent) },
       { path: 'orders', loadComponent: () => import('./components/client-orders.component').then(m => m.ClientOrdersComponent) },
       { path: 'tracking', loadComponent: () => import('./components/client-tracking.component').then(m => m.ClientTrackingComponent) },
       { path: '', redirectTo: 'stores', pathMatch: 'full' },
+    ]
+  },
+  {
+    path: 'livreur',
+    component: LayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      { path: 'deliveries', loadComponent: () => import('./components/livreur-deliveries.component').then(m => m.LivreurDeliveriesComponent) },
+      { path: '', redirectTo: 'deliveries', pathMatch: 'full' },
     ]
   },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
