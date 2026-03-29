@@ -10,6 +10,7 @@ public class DeliveryRequest {
     private Long orderId;
     @NotNull
     private Long courierId;
+    private Long clientId;
     private DeliveryStatus status;
     private String estimatedTime;
     private String notes;

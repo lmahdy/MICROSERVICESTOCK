@@ -11,6 +11,7 @@ public class UserMapper {
         User user = new User();
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());
         user.setPhone(request.getPhone());
         user.setAddress(request.getAddress());
         user.setExternalId(request.getExternalId());

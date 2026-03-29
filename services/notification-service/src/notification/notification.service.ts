@@ -6,7 +6,7 @@ import { Notification, NotificationDocument } from './notification.schema';
 
 @Injectable()
 export class NotificationService {
-  constructor(@InjectModel(Notification.name) private model: Model<NotificationDocument>) {}
+  constructor(@InjectModel(Notification.name) private model: Model<NotificationDocument>) { }
 
   findAll() {
     return this.model.find().sort({ createdAt: -1 }).lean();
@@ -16,8 +16,27 @@ export class NotificationService {
     return this.model.findById(id).lean();
   }
 
+  findByUserId(userId: string) {
+    return this.model.find({ userId }).sort({ createdAt: -1 }).lean();
+  }
+
+  async countUnread(userId: string): Promise<number> {
+    return this.model.countDocuments({ userId, read: false });
+  }
+
   async create(dto: CreateNotificationDto) {
     return this.model.create(dto);
+  }
+
+  async markAsRead(id: string) {
+    const updated = await this.model.findByIdAndUpdate(id, { read: true }, { new: true }).lean();
+    if (!updated) throw new NotFoundException('Notification not found');
+    return updated;
+  }
+
+  async markAllReadForUser(userId: string) {
+    await this.model.updateMany({ userId, read: false }, { read: true });
+    return { success: true };
   }
 
   async update(id: string, dto: UpdateNotificationDto) {

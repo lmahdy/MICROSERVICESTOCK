@@ -6,11 +6,22 @@ import { NotificationService } from './notification.service';
 @ApiTags('notifications')
 @Controller('/api/notifications')
 export class NotificationController {
-  constructor(private service: NotificationService) {}
+  constructor(private service: NotificationService) { }
 
   @Get()
   findAll() {
     return this.service.findAll();
+  }
+
+  @Get('user/:userId')
+  findByUser(@Param('userId') userId: string) {
+    return this.service.findByUserId(userId);
+  }
+
+  @Get('user/:userId/unread-count')
+  async unreadCount(@Param('userId') userId: string) {
+    const count = await this.service.countUnread(userId);
+    return { count };
   }
 
   @Get(':id')
@@ -21,6 +32,16 @@ export class NotificationController {
   @Post()
   create(@Body() dto: CreateNotificationDto) {
     return this.service.create(dto);
+  }
+
+  @Patch(':id/read')
+  markAsRead(@Param('id') id: string) {
+    return this.service.markAsRead(id);
+  }
+
+  @Patch('user/:userId/read-all')
+  markAllRead(@Param('userId') userId: string) {
+    return this.service.markAllReadForUser(userId);
   }
 
   @Patch(':id')

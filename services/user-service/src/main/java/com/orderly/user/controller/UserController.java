@@ -1,5 +1,6 @@
 package com.orderly.user.controller;
 
+import com.orderly.user.dto.LoginRequest;
 import com.orderly.user.dto.UserRequest;
 import com.orderly.user.dto.UserResponse;
 import com.orderly.user.service.UserService;
@@ -27,6 +28,16 @@ public class UserController {
     @GetMapping("/{id}")
     public UserResponse one(@PathVariable Long id) {
         return userService.findById(id);
+    }
+
+    @GetMapping("/email/{email}")
+    public UserResponse byEmail(@PathVariable String email) {
+        return userService.findByEmail(email);
+    }
+
+    @PostMapping("/login")
+    public UserResponse login(@Valid @RequestBody LoginRequest request) {
+        return userService.login(request);
     }
 
     @PostMapping

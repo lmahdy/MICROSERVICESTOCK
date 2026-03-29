@@ -11,11 +11,23 @@ export class Notification {
   @Prop({ required: true })
   message: string;
 
-  @Prop()
+  @Prop({ index: true })
   userId?: string;
+
+  @Prop()
+  recipientRole?: string;
 
   @Prop({ default: 'INFO' })
   type: string;
+
+  @Prop()
+  relatedEntityType?: string;
+
+  @Prop()
+  relatedEntityId?: string;
+
+  @Prop({ default: false })
+  read: boolean;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

@@ -26,6 +26,9 @@ public class Delivery {
     @NotNull
     private Long courierId;
 
+    /** Client who placed the order — needed for notifications */
+    private Long clientId;
+
     @Enumerated(EnumType.STRING)
     private DeliveryStatus status = DeliveryStatus.ASSIGNED;
 
