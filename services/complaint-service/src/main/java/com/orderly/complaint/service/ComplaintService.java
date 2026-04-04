@@ -42,7 +42,7 @@ public class ComplaintService {
         return ComplaintMapper.toResponse(c);
     }
 
-    public List<ComplaintResponse> byClient(Long clientId) {
+    public List<ComplaintResponse> byClient(String clientId) {
         return repository.findByClientId(clientId).stream().map(ComplaintMapper::toResponse).toList();
     }
 

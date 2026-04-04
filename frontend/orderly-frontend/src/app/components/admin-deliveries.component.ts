@@ -16,7 +16,7 @@ const DELIVERY_STATUSES = ['ASSIGNED', 'PICKED_UP', 'ON_THE_WAY', 'DELIVERED', '
       <h3>Create Delivery</h3>
       <div class="form-row">
         <input [(ngModel)]="form.orderId" placeholder="Order ID *" type="number" class="inp"/>
-        <input [(ngModel)]="form.courierId" placeholder="Courier (User) ID *" type="number" class="inp"/>
+        <input [(ngModel)]="form.courierId" placeholder="Courier (User) ID *" type="text" class="inp"/>
         <input [(ngModel)]="form.estimatedTime" placeholder="Estimated time (e.g. 30 min)" class="inp"/>
         <input [(ngModel)]="form.notes" placeholder="Notes" class="inp"/>
         <button class="btn-primary" (click)="create()" [disabled]="!form.orderId || !form.courierId">+ Create Delivery</button>
@@ -96,7 +96,7 @@ export class AdminDeliveriesComponent implements OnInit {
 
     create() {
         this.crSuccess = ''; this.crError = '';
-        this.api.createDelivery({ ...this.form, orderId: +this.form.orderId, courierId: +this.form.courierId }).subscribe({
+        this.api.createDelivery({ ...this.form, orderId: +this.form.orderId, courierId: this.form.courierId }).subscribe({
             next: () => { this.crSuccess = 'Delivery created!'; this.form = {}; this.load(); },
             error: e => this.crError = 'Error: ' + (e.error?.message || e.message)
         });

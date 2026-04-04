@@ -146,7 +146,7 @@ export class ClientProductsComponent implements OnInit {
         this.orderSuccess = ''; this.orderError = ''; this.ordering = true;
         const user = this.auth.getUser();
         const body = {
-            clientId: Number(user?.id ?? 2),
+            clientId: user?.id ?? '',
             storeId: Number(this.storeId),
             deliveryAddress: this.deliveryAddress.trim(),
             items: this.cart.map((i: any) => ({

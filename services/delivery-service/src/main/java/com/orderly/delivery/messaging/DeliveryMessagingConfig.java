@@ -60,14 +60,14 @@ public class DeliveryMessagingConfig {
                                              String status,
                                              Long deliveryId,
                                              Long orderId,
-                                             Long courierId,
-                                             Long clientId) {
+                                             String courierId,
+                                             String clientId) {
         try {
             Map<String, Object> event = Map.of(
                     "deliveryId", deliveryId,
                     "orderId", orderId,
                     "courierId", courierId,
-                    "clientId", clientId != null ? clientId : 0L,
+                    "clientId", clientId != null ? clientId : "",
                     "status", status
             );
 

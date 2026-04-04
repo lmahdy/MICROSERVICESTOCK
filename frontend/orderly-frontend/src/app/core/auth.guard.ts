@@ -7,26 +7,34 @@ export const authGuard: CanActivateFn = (route, state) => {
     const router = inject(Router);
 
     if (!auth.isLoggedIn()) {
-        router.navigate(['/login']);
+        auth.login();
         return false;
     }
 
-    // Check role-based access
     const url = state.url;
     const role = auth.getRole();
 
+    // No role assigned — treat as CLIENT (default for new users)
+    if (!role) {
+        if (url.startsWith('/admin') || url.startsWith('/livreur')) {
+            router.navigate(['/client/stores']);
+            return false;
+        }
+        return true;
+    }
+
     if (url.startsWith('/admin') && role !== 'ADMIN') {
-        router.navigate(['/login']);
+        auth.navigateByRole();
         return false;
     }
 
     if (url.startsWith('/livreur') && role !== 'LIVREUR') {
-        router.navigate(['/login']);
+        auth.navigateByRole();
         return false;
     }
 
     if (url.startsWith('/client') && role !== 'CLIENT') {
-        router.navigate(['/login']);
+        auth.navigateByRole();
         return false;
     }
 

@@ -24,7 +24,7 @@ public class Order {
     private Long id;
 
     @NotNull
-    private Long clientId;
+    private String clientId;
 
     @NotNull
     private Long storeId;

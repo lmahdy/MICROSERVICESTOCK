@@ -25,7 +25,7 @@ public class Complaint {
     private Long orderId;
 
     @NotNull
-    private Long clientId;
+    private String clientId;
 
     @NotBlank
     private String description;

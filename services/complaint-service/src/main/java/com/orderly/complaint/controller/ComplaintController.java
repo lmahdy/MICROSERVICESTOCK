@@ -26,7 +26,7 @@ public class ComplaintController {
     public ComplaintResponse one(@PathVariable Long id) { return service.findById(id); }
 
     @GetMapping("/client/{clientId}")
-    public List<ComplaintResponse> byClient(@PathVariable Long clientId) { return service.byClient(clientId); }
+    public List<ComplaintResponse> byClient(@PathVariable String clientId) { return service.byClient(clientId); }
 
     /**
      * ASYNCHRONOUS — RabbitMQ

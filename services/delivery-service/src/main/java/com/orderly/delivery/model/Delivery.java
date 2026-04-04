@@ -24,10 +24,10 @@ public class Delivery {
     private Long orderId;
 
     @NotNull
-    private Long courierId;
+    private String courierId;
 
     /** Client who placed the order — needed for notifications */
-    private Long clientId;
+    private String clientId;
 
     @Enumerated(EnumType.STRING)
     private DeliveryStatus status = DeliveryStatus.ASSIGNED;

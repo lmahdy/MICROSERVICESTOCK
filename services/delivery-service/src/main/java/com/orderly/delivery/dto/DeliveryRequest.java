@@ -9,8 +9,8 @@ public class DeliveryRequest {
     @NotNull
     private Long orderId;
     @NotNull
-    private Long courierId;
-    private Long clientId;
+    private String courierId;
+    private String clientId;
     private DeliveryStatus status;
     private String estimatedTime;
     private String notes;

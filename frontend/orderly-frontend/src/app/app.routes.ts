@@ -41,6 +41,6 @@ export const routes: Routes = [
       { path: '', redirectTo: 'deliveries', pathMatch: 'full' },
     ]
   },
-  { path: '', pathMatch: 'full', redirectTo: 'login' },
-  { path: '**', redirectTo: 'login' }
+  { path: '', pathMatch: 'full', component: LoginComponent },
+  { path: '**', component: LoginComponent }
 ];

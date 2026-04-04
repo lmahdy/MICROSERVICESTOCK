@@ -45,7 +45,7 @@ public class DeliveryService {
         return DeliveryMapper.toResponse(d);
     }
 
-    public List<DeliveryResponse> findByCourier(Long courierId) {
+    public List<DeliveryResponse> findByCourier(String courierId) {
         return repository.findByCourierId(courierId).stream().map(DeliveryMapper::toResponse).toList();
     }
 
@@ -62,7 +62,7 @@ public class DeliveryService {
                 String url = "http://localhost:9016/api/orders/" + d.getOrderId();
                 var response = restTemplate.getForObject(url, java.util.Map.class);
                 if (response != null && response.get("clientId") != null) {
-                    d.setClientId(Long.parseLong(response.get("clientId").toString()));
+                    d.setClientId(response.get("clientId").toString());
                     log.info("[DELIVERY] Auto-resolved clientId={} from order {}", d.getClientId(), d.getOrderId());
                 }
             } catch (Exception e) {

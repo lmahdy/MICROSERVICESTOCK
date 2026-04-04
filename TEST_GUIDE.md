@@ -4,11 +4,11 @@
 
 Make sure these services are running before starting:
 
-| Service | Port | How to Start |
-|---------|------|-------------|
-| MySQL (XAMPP) | 3307 | Start XAMPP Control Panel > MySQL |
-| MongoDB | 27017 | `mongod` or start MongoDB service |
-| RabbitMQ | 5672 | Start RabbitMQ service (management UI at http://localhost:15672) |
+| Service       | Port  | How to Start                                                     |
+| ------------- | ----- | ---------------------------------------------------------------- |
+| MySQL (XAMPP) | 3307  | Start XAMPP Control Panel > MySQL                                |
+| MongoDB       | 27017 | `mongod` or start MongoDB service                                |
+| RabbitMQ      | 5672  | Start RabbitMQ service (management UI at http://localhost:15672) |
 
 RabbitMQ default credentials: `guest` / `guest`
 
@@ -19,6 +19,7 @@ RabbitMQ default credentials: `guest` / `guest`
 Start services in this exact order (wait for each to register with Eureka before starting the next group):
 
 ### 1. Infrastructure (start first, wait until ready)
+
 ```bash
 # Terminal 1 - Config Server (port 8888)
 cd config-server
@@ -28,9 +29,11 @@ mvnw spring-boot:run
 cd discovery
 mvnw spring-boot:run
 ```
+
 Verify Eureka is running: http://localhost:8761
 
 ### 2. Gateway
+
 ```bash
 # Terminal 3 - API Gateway (port 9016)
 cd gateway
@@ -38,6 +41,7 @@ mvnw spring-boot:run
 ```
 
 ### 3. Backend Services (can start in parallel)
+
 ```bash
 # Terminal 4 - User Service (port 8090)
 cd services/user-service
@@ -70,6 +74,7 @@ mvnw spring-boot:run
 ```
 
 ### 4. Frontend
+
 ```bash
 # Terminal 11 - Angular Frontend (port 4200)
 cd frontend/orderly-frontend
@@ -229,6 +234,7 @@ Open browser: http://localhost:4200
 All API calls go through the Gateway at `http://localhost:9016`.
 
 ### Users
+
 ```bash
 # Create users (if not already created via frontend)
 curl -s -X POST http://localhost:9016/api/users -H "Content-Type: application/json" \
@@ -249,6 +255,7 @@ curl -s http://localhost:9016/api/users
 ```
 
 ### Stores & Products
+
 ```bash
 curl -s -X POST http://localhost:9016/api/stores -H "Content-Type: application/json" \
   -d '{"name":"Pizza Palace","description":"Best pizza in town","address":"456 Food Street","phone":"11223344","openingHours":"10:00-23:00"}'
@@ -261,12 +268,14 @@ curl -s -X POST http://localhost:9016/api/products -H "Content-Type: application
 ```
 
 ### Orders (triggers RabbitMQ events)
+
 ```bash
 curl -s -X POST http://localhost:9016/api/orders -H "Content-Type: application/json" \
   -d '{"clientId":2,"storeId":1,"deliveryAddress":"789 Customer Lane","items":[{"productId":1,"quantity":2},{"productId":2,"quantity":1}]}'
 ```
 
 ### Deliveries (triggers events for each status change)
+
 ```bash
 # Create delivery (auto-resolves clientId from order-service)
 curl -s -X POST http://localhost:9016/api/deliveries -H "Content-Type: application/json" \
@@ -279,6 +288,7 @@ curl -s -X PATCH http://localhost:9016/api/deliveries/1/status/DELIVERED
 ```
 
 ### Notifications (per-user access)
+
 ```bash
 # Get notifications for a specific user
 curl -s http://localhost:9016/api/notifications/user/2
@@ -297,6 +307,7 @@ curl -s http://localhost:9016/api/notifications
 ```
 
 ### Complaints
+
 ```bash
 curl -s http://localhost:9016/api/complaints
 curl -s -X PATCH http://localhost:9016/api/complaints/1/status/RESOLVED
@@ -361,15 +372,15 @@ curl -s -X PATCH http://localhost:9016/api/complaints/1/status/RESOLVED
 
 ## Communication Patterns
 
-| From | To | Method | Purpose |
-|------|----|--------|---------|
-| **Order Service** | Product Service | **OpenFeign** (sync) | Validate products, get prices during order creation |
-| **Order Service** | Complaint + Notification | **RabbitMQ** fanout exchange (async) | ORDER_CREATED event — triggers auto-complaint + notification |
-| **Delivery Service** | Notification Service | **RabbitMQ** topic exchange (async) | ALL delivery status events (ASSIGNED, PICKED_UP, ON_THE_WAY, DELIVERED) |
-| **Delivery Service** | Order Service | **RestTemplate** via Gateway (sync) | Update order to DELIVERED when delivery completes |
-| **Delivery Service** | Order Service | **RestTemplate** via Gateway (sync) | Resolve clientId when creating delivery |
-| **Frontend** | Notification Service | **REST** via Gateway (sync) | Fetch per-user notifications, unread count, mark read |
-| **Frontend** | User Service | **REST** via Gateway (sync) | Login (email lookup), signup (create user) |
+| From                 | To                       | Method                               | Purpose                                                                 |
+| -------------------- | ------------------------ | ------------------------------------ | ----------------------------------------------------------------------- |
+| **Order Service**    | Product Service          | **OpenFeign** (sync)                 | Validate products, get prices during order creation                     |
+| **Order Service**    | Complaint + Notification | **RabbitMQ** fanout exchange (async) | ORDER_CREATED event — triggers auto-complaint + notification            |
+| **Delivery Service** | Notification Service     | **RabbitMQ** topic exchange (async)  | ALL delivery status events (ASSIGNED, PICKED_UP, ON_THE_WAY, DELIVERED) |
+| **Delivery Service** | Order Service            | **RestTemplate** via Gateway (sync)  | Update order to DELIVERED when delivery completes                       |
+| **Delivery Service** | Order Service            | **RestTemplate** via Gateway (sync)  | Resolve clientId when creating delivery                                 |
+| **Frontend**         | Notification Service     | **REST** via Gateway (sync)          | Fetch per-user notifications, unread count, mark read                   |
+| **Frontend**         | User Service             | **REST** via Gateway (sync)          | Login (email lookup), signup (create user)                              |
 
 ### Sync vs Async Explained
 
@@ -393,14 +404,14 @@ curl -s -X PATCH http://localhost:9016/api/complaints/1/status/RESOLVED
 
 ## Databases
 
-| Service | Database | Type |
-|---------|----------|------|
-| Order Service | H2 in-memory (orderdb) | SQL |
-| Store Service | H2 in-memory (storedb) | SQL |
-| Product Service | H2 in-memory (productdb) | SQL |
-| User Service | MySQL orderly_users | SQL |
-| Delivery Service | MySQL orderly_delivery | SQL |
-| Complaint Service | MySQL orderly_complaint | SQL |
+| Service              | Database                      | Type  |
+| -------------------- | ----------------------------- | ----- |
+| Order Service        | H2 in-memory (orderdb)        | SQL   |
+| Store Service        | H2 in-memory (storedb)        | SQL   |
+| Product Service      | H2 in-memory (productdb)      | SQL   |
+| User Service         | MySQL orderly_users           | SQL   |
+| Delivery Service     | MySQL orderly_delivery        | SQL   |
+| Complaint Service    | MySQL orderly_complaint       | SQL   |
 | Notification Service | MongoDB orderly_notifications | NoSQL |
 
 ## Troubleshooting
@@ -422,7 +433,7 @@ curl -s -X PATCH http://localhost:9016/api/complaints/1/status/RESOLVED
 
 # HOW MY PROJECT WORKS — SIMPLE EXPLANATION
 
-*(This section is designed to help you understand and explain the project to your professor.)*
+_(This section is designed to help you understand and explain the project to your professor.)_
 
 ---
 
@@ -456,6 +467,7 @@ Here is the full picture:
 When a client places an order, the **order-service** needs to check if the products exist and get their prices. So it **calls** the **product-service** and **waits** for the response. If product-service is down, the order fails.
 
 **Technologies used:**
+
 - **OpenFeign** = a tool that lets one Spring service call another using a simple Java interface. It finds the other service through Eureka (no URL needed).
 - **RestTemplate** = another tool for making HTTP calls. Simpler, but you write the URL yourself.
 
@@ -471,20 +483,21 @@ When a client places an order, the **order-service** needs to check if the produ
 After the order is saved, the **order-service** drops a message in RabbitMQ saying "hey, order #5 was just created." Then it moves on. The **notification-service** picks up that message later and creates a notification. The **complaint-service** also picks up a copy and creates a complaint. Order-service doesn't know or care when they do it.
 
 **Technology used:**
+
 - **RabbitMQ** = a message broker. Think of it as a post office. Services send letters (messages) to a mailbox (exchange). Other services have their own inbox (queue) and pick up the letters.
 
 ---
 
 ### Quick comparison
 
-| | Synchronous | Asynchronous |
-|---|---|---|
-| **Meaning** | Ask and WAIT for the answer | Send a message and MOVE ON |
-| **Real life** | Phone call | Text message |
-| **ORDERLY example** | Order asks Product for the price | Order tells Notification "order was created" |
-| **What if the other is down?** | The request FAILS | The message stays in the queue and is delivered later |
-| **Technology** | OpenFeign / RestTemplate | RabbitMQ |
-| **When to use** | When you NEED the answer to continue | When you just want to INFORM other services |
+|                                | Synchronous                          | Asynchronous                                          |
+| ------------------------------ | ------------------------------------ | ----------------------------------------------------- |
+| **Meaning**                    | Ask and WAIT for the answer          | Send a message and MOVE ON                            |
+| **Real life**                  | Phone call                           | Text message                                          |
+| **ORDERLY example**            | Order asks Product for the price     | Order tells Notification "order was created"          |
+| **What if the other is down?** | The request FAILS                    | The message stays in the queue and is delivered later |
+| **Technology**                 | OpenFeign / RestTemplate             | RabbitMQ                                              |
+| **When to use**                | When you NEED the answer to continue | When you just want to INFORM other services           |
 
 ---
 
@@ -498,14 +511,16 @@ After the order is saved, the **order-service** drops a message in RabbitMQ sayi
 
 **It communicates with:**
 
-| Talks to | How? | Sync or Async? | Technology | Why? |
-|----------|------|----------------|------------|------|
-| Product Service | Directly | **Sync** | OpenFeign | To check if products exist and get the real prices |
-| Notification Service | Through RabbitMQ | **Async** | RabbitMQ (fanout) | To tell it "a new order was created" so it can notify the client |
-| Complaint Service | Through RabbitMQ | **Async** | RabbitMQ (fanout) | To tell it "a new order was created" so it can create a complaint record |
+| Talks to             | How?             | Sync or Async? | Technology        | Why?                                                                     |
+| -------------------- | ---------------- | -------------- | ----------------- | ------------------------------------------------------------------------ |
+| Product Service      | Directly         | **Sync**       | OpenFeign         | To check if products exist and get the real prices                       |
+| Notification Service | Through RabbitMQ | **Async**      | RabbitMQ (fanout) | To tell it "a new order was created" so it can notify the client         |
+| Complaint Service    | Through RabbitMQ | **Async**      | RabbitMQ (fanout) | To tell it "a new order was created" so it can create a complaint record |
 
 **Real user-flow example:**
+
 > Ahmed opens the app, picks 2 pizzas, and clicks "Place Order."
+>
 > 1. Order-service **calls** product-service (sync): "Does product #1 exist? What's its price?" → gets the answer → calculates total
 > 2. Order-service saves the order in the database
 > 3. Order-service **sends a message** to RabbitMQ (async): "Order #5 was created, clientId=2, total=27.50"
@@ -513,10 +528,12 @@ After the order is saved, the **order-service** drops a message in RabbitMQ sayi
 > 5. Complaint-service picks up the same message → creates a complaint record
 
 **What I can say to the professor:**
+
 - "Order-service uses **synchronous** communication with product-service via **OpenFeign** because it needs the product prices before it can save the order."
 - "After saving, it uses **asynchronous** communication via **RabbitMQ** to inform notification-service and complaint-service, because it doesn't need to wait for them."
 
 **Code locations:**
+
 - Feign call: `OrderService.java` line 90 → `productClient.getProductById(item.getProductId())`
 - RabbitMQ publish: `OrderProducer.java` line 32 → `rabbitTemplate.convertAndSend(ORDER_CREATED_EXCHANGE, "", event)`
 - Exchange config: `RabbitMQConfig.java` → `FanoutExchange("ORDER_CREATED_EXCHANGE")`
@@ -529,28 +546,33 @@ After the order is saved, the **order-service** drops a message in RabbitMQ sayi
 
 **It communicates with:**
 
-| Talks to | How? | Sync or Async? | Technology | Why? |
-|----------|------|----------------|------------|------|
-| Order Service | Directly (via Gateway) | **Sync** | RestTemplate | (1) To get the clientId from the order (2) To mark the order as DELIVERED |
-| Notification Service | Through RabbitMQ | **Async** | RabbitMQ (topic) | To notify the client and courier about every status change |
+| Talks to             | How?                   | Sync or Async? | Technology       | Why?                                                                      |
+| -------------------- | ---------------------- | -------------- | ---------------- | ------------------------------------------------------------------------- |
+| Order Service        | Directly (via Gateway) | **Sync**       | RestTemplate     | (1) To get the clientId from the order (2) To mark the order as DELIVERED |
+| Notification Service | Through RabbitMQ       | **Async**      | RabbitMQ (topic) | To notify the client and courier about every status change                |
 
 **Real user-flow example:**
+
 > The admin assigns a courier to Ahmed's order:
+>
 > 1. Delivery-service **calls** order-service (sync): "What is the clientId for order #5?" → gets clientId=2
 > 2. Saves the delivery with status ASSIGNED
 > 3. **Sends a message** to RabbitMQ (async): "delivery.ASSIGNED — deliveryId=1, orderId=5, courierId=3, clientId=2"
 > 4. Notification-service picks it up → creates notification for Ahmed ("Courier Assigned") AND for the courier ("New Delivery Assignment")
 >
 > Later, the courier updates status to PICKED_UP, ON_THE_WAY, DELIVERED:
+>
 > - Each time, delivery-service publishes a new event to RabbitMQ
 > - Notification-service creates a new notification for the client each time
 > - When DELIVERED: delivery-service ALSO **calls** order-service (sync) to update the order status
 
 **What I can say to the professor:**
+
 - "Delivery-service uses **synchronous** RestTemplate to call order-service when it needs data (clientId) or needs to update the order status."
 - "It uses **asynchronous** RabbitMQ to inform notification-service about every delivery status change, so the user sees live progress."
 
 **Code locations:**
+
 - Sync call (get clientId): `DeliveryService.java` line 62 → `restTemplate.getForObject(url, Map.class)`
 - Sync call (update order): `DeliveryService.java` line 110 → `restTemplate.exchange(url, PATCH, ...)`
 - Async publish: `DeliveryMessagingConfig.java` line 76 → `rabbitTemplate.convertAndSend(DELIVERY_EVENTS_EXCHANGE, routingKey, event)`
@@ -564,35 +586,38 @@ After the order is saved, the **order-service** drops a message in RabbitMQ sayi
 
 **It communicates with:**
 
-| Talks to | How? | Sync or Async? | Technology | Why? |
-|----------|------|----------------|------------|------|
-| Order Service | Through RabbitMQ (it RECEIVES) | **Async** | RabbitMQ (fanout) | Receives "order created" events to notify the client |
-| Delivery Service | Through RabbitMQ (it RECEIVES) | **Async** | RabbitMQ (topic) | Receives all delivery status events to notify client + courier |
-| Frontend | Directly (it is CALLED) | **Sync** | REST API via Gateway | Frontend reads notifications, unread count, marks as read |
+| Talks to         | How?                           | Sync or Async? | Technology           | Why?                                                           |
+| ---------------- | ------------------------------ | -------------- | -------------------- | -------------------------------------------------------------- |
+| Order Service    | Through RabbitMQ (it RECEIVES) | **Async**      | RabbitMQ (fanout)    | Receives "order created" events to notify the client           |
+| Delivery Service | Through RabbitMQ (it RECEIVES) | **Async**      | RabbitMQ (topic)     | Receives all delivery status events to notify client + courier |
+| Frontend         | Directly (it is CALLED)        | **Sync**       | REST API via Gateway | Frontend reads notifications, unread count, marks as read      |
 
 **Important:** Notification-service does NOT call anyone. It only **listens** and **is called**.
 
 **Who gets notified for what:**
 
-| Event | Who gets the notification |
-|-------|--------------------------|
-| Order created | The **client** who placed the order |
+| Event             | Who gets the notification                                                               |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| Order created     | The **client** who placed the order                                                     |
 | Delivery assigned | The **client** ("a courier was assigned") + the **courier** ("you have a new delivery") |
-| Picked up | The **client** ("your order was picked up") |
-| On the way | The **client** ("your order is on its way") |
-| Delivered | The **client** ("your order was delivered") |
+| Picked up         | The **client** ("your order was picked up")                                             |
+| On the way        | The **client** ("your order is on its way")                                             |
+| Delivered         | The **client** ("your order was delivered")                                             |
 
 **How it knows which user to notify:**
+
 - The event message contains `clientId` and `courierId`
 - Notification-service saves the notification with `userId = clientId` (or `courierId` for the courier)
 - The frontend queries notifications by the logged-in user's ID
 
 **What I can say to the professor:**
+
 - "Notification-service is a NestJS app that listens to RabbitMQ for order and delivery events."
 - "It is completely decoupled from order-service and delivery-service — they never call each other directly."
 - "It saves notifications in MongoDB, and the frontend polls for new ones every 15 seconds."
 
 **Code locations:**
+
 - RabbitMQ connection + queue setup: `rabbitmq.consumer.ts` lines 48-68
 - ORDER_CREATED consumer: `rabbitmq.consumer.ts` lines 76-97
 - DELIVERY_ASSIGNED consumer: `rabbitmq.consumer.ts` lines 100-137
@@ -604,11 +629,12 @@ After the order is saved, the **order-service** drops a message in RabbitMQ sayi
 
 **What it does:** Automatically creates a complaint record when an order is placed.
 
-| Talks to | How? | Sync or Async? | Technology | Why? |
-|----------|------|----------------|------------|------|
-| Order Service | Through RabbitMQ (it RECEIVES) | **Async** | RabbitMQ (fanout) | Creates an auto-complaint for every new order |
+| Talks to      | How?                           | Sync or Async? | Technology        | Why?                                          |
+| ------------- | ------------------------------ | -------------- | ----------------- | --------------------------------------------- |
+| Order Service | Through RabbitMQ (it RECEIVES) | **Async**      | RabbitMQ (fanout) | Creates an auto-complaint for every new order |
 
 **What I can say to the professor:**
+
 - "When an order is created, complaint-service automatically receives the event from RabbitMQ and creates a complaint with status OPEN."
 - "This works like notification-service — it listens to the same exchange but has its own queue."
 
@@ -620,11 +646,11 @@ After the order is saved, the **order-service** drops a message in RabbitMQ sayi
 
 These 3 services are simple. They **do not communicate** with any other service.
 
-| Service | What it does | Communicates with other services? |
-|---------|-------------|----------------------------------|
-| **User Service** | Creates accounts, handles login | **No.** Only called by the frontend. |
-| **Store Service** | Creates and lists stores | **No.** Only called by the frontend. |
-| **Product Service** | Creates and lists products | **No.** But it IS called by order-service via Feign. |
+| Service             | What it does                    | Communicates with other services?                    |
+| ------------------- | ------------------------------- | ---------------------------------------------------- |
+| **User Service**    | Creates accounts, handles login | **No.** Only called by the frontend.                 |
+| **Store Service**   | Creates and lists stores        | **No.** Only called by the frontend.                 |
+| **Product Service** | Creates and lists products      | **No.** But it IS called by order-service via Feign. |
 
 ---
 
@@ -634,14 +660,14 @@ These 3 services are simple. They **do not communicate** with any other service.
 
 The frontend never calls services directly. It always calls the Gateway on port 9016, and the Gateway **forwards** the request to the right service using Eureka to find it.
 
-| Frontend calls | Gateway forwards to |
-|---------------|-------------------|
-| `/api/users/**` | user-service |
-| `/api/stores/**` | store-service |
-| `/api/products/**` | product-service |
-| `/api/orders/**` | order-service |
-| `/api/deliveries/**` | delivery-service |
-| `/api/complaints/**` | complaint-service |
+| Frontend calls          | Gateway forwards to  |
+| ----------------------- | -------------------- |
+| `/api/users/**`         | user-service         |
+| `/api/stores/**`        | store-service        |
+| `/api/products/**`      | product-service      |
+| `/api/orders/**`        | order-service        |
+| `/api/deliveries/**`    | delivery-service     |
+| `/api/complaints/**`    | complaint-service    |
 | `/api/notifications/**` | notification-service |
 
 **What I can say:** "The Gateway is like a receptionist. The frontend asks the receptionist, and the receptionist knows which department to forward the call to."
@@ -653,6 +679,7 @@ The frontend never calls services directly. It always calls the Gateway on port 
 **What it does:** The website the user interacts with.
 
 **How notifications work in the frontend:**
+
 1. When you log in, the app stores your `userId` in session storage
 2. The bell icon in the top-right corner polls `GET /api/notifications/user/{userId}/unread-count` every 15 seconds
 3. When you click the bell, it fetches `GET /api/notifications/user/{userId}` to show the list
@@ -708,10 +735,12 @@ Courier updates to DELIVERED:
 ### C. How does a notification know which user it belongs to?
 
 Every event message contains these IDs:
+
 - `clientId` = the customer who placed the order (comes from the order)
 - `courierId` = the delivery person (comes from the delivery)
 
 Notification-service uses these to set the `userId` field:
+
 - For client notifications: `userId = clientId`
 - For courier notifications: `userId = courierId`
 
@@ -734,38 +763,43 @@ So each user only sees their own notifications.
 
 ## 5. Final Communication Table
 
-| # | From | To | Sync/Async | Technology | Why it exists | If it fails? |
-|---|------|-----|-----------|------------|---------------|-------------|
-| 1 | Order Service | Product Service | **Sync** | OpenFeign | Get product prices to calculate total | Order creation fails (500 error) |
-| 2 | Order Service | Notification Service | **Async** | RabbitMQ (fanout) | Notify client that order was placed | Order still saved, notification delayed |
-| 3 | Order Service | Complaint Service | **Async** | RabbitMQ (fanout) | Auto-create complaint for new order | Order still saved, complaint delayed |
-| 4 | Delivery Service | Order Service | **Sync** | RestTemplate | Get clientId from order / mark order as DELIVERED | Warning logged, delivery still saved |
-| 5 | Delivery Service | Notification Service | **Async** | RabbitMQ (topic) | Notify client+courier of every delivery status change | Delivery still saved, notification delayed |
-| 6 | Frontend | All services | **Sync** | HTTP via Gateway | User interacts with the app | User sees error in the UI |
-| 7 | Gateway | All services | **Sync** | Eureka service discovery | Route requests to the right service | Gateway returns 503 |
+| #   | From             | To                   | Sync/Async | Technology               | Why it exists                                         | If it fails?                               |
+| --- | ---------------- | -------------------- | ---------- | ------------------------ | ----------------------------------------------------- | ------------------------------------------ |
+| 1   | Order Service    | Product Service      | **Sync**   | OpenFeign                | Get product prices to calculate total                 | Order creation fails (500 error)           |
+| 2   | Order Service    | Notification Service | **Async**  | RabbitMQ (fanout)        | Notify client that order was placed                   | Order still saved, notification delayed    |
+| 3   | Order Service    | Complaint Service    | **Async**  | RabbitMQ (fanout)        | Auto-create complaint for new order                   | Order still saved, complaint delayed       |
+| 4   | Delivery Service | Order Service        | **Sync**   | RestTemplate             | Get clientId from order / mark order as DELIVERED     | Warning logged, delivery still saved       |
+| 5   | Delivery Service | Notification Service | **Async**  | RabbitMQ (topic)         | Notify client+courier of every delivery status change | Delivery still saved, notification delayed |
+| 6   | Frontend         | All services         | **Sync**   | HTTP via Gateway         | User interacts with the app                           | User sees error in the UI                  |
+| 7   | Gateway          | All services         | **Sync**   | Eureka service discovery | Route requests to the right service                   | Gateway returns 503                        |
 
 ---
 
 ## 6. Easy Memory Version
 
 **Order Service:**
+
 - talks to **Product Service** (sync, Feign) → to get prices
 - talks to **Notification Service** (async, RabbitMQ) → to notify client
 - talks to **Complaint Service** (async, RabbitMQ) → to create complaint
 
 **Delivery Service:**
+
 - talks to **Order Service** (sync, RestTemplate) → to get clientId + update order status
 - talks to **Notification Service** (async, RabbitMQ) → to notify client and courier
 
 **Notification Service:**
+
 - receives from **Order Service** (async, RabbitMQ)
 - receives from **Delivery Service** (async, RabbitMQ)
 - the **Frontend** reads from it (sync, REST)
 
 **Complaint Service:**
+
 - receives from **Order Service** (async, RabbitMQ)
 
 **User / Store / Product Service:**
+
 - standalone (no inter-service communication)
 - only called by the frontend through the Gateway
 
@@ -796,40 +830,50 @@ So each user only sees their own notifications.
 ### C. Answers to likely professor questions
 
 **Q: Why did you use RabbitMQ?**
+
 > "To decouple the services. Order-service doesn't need to know about notification-service. It just publishes an event. If notification-service is down, the message stays in the queue and is processed when it comes back."
 
 **Q: Why is Order → Product synchronous?**
+
 > "Because order-service NEEDS the product prices to calculate the total before saving. It can't continue without the answer."
 
 **Q: Why is Order → Notification asynchronous?**
+
 > "Because order-service doesn't need to wait for the notification to be created. The order is already saved. The notification is a background task that can happen later."
 
 **Q: Is Order → Notification still a communication even without direct REST?**
+
 > "Yes! It's an indirect communication through RabbitMQ. Order-service publishes, notification-service consumes. They just don't call each other directly."
 
 **Q: Why does Delivery communicate with Order?**
+
 > "Two reasons: (1) When creating a delivery, it needs to get the clientId from the order, so it knows who to send notifications to. (2) When a delivery is marked DELIVERED, it updates the order status to DELIVERED too."
 
 **Q: How do notifications know which user receives them?**
+
 > "The event message contains the clientId and courierId. Notification-service saves the notification with the right userId. The frontend queries by the logged-in user's ID."
 
 **Q: What is the role of the Gateway?**
+
 > "It's the single entry point. The frontend never calls services directly. It calls the Gateway, and the Gateway uses Eureka to find and forward the request to the correct service."
 
 **Q: What is the role of Eureka?**
+
 > "It's the service registry — like a phone book. Each service registers itself when it starts. The Gateway and Feign clients look up service addresses from Eureka instead of using hardcoded URLs."
 
 **Q: What does Keycloak add?**
+
 > "Keycloak would add OAuth2 security — token-based authentication. The code is prepared (security config exists but is commented out). We disabled it for development but it can be activated by starting a Keycloak server and uncommenting the config."
 
 **Q: What is the difference between fanout and topic exchanges?**
+
 > "Fanout sends a copy of every message to ALL bound queues — we use it for ORDER_CREATED because both complaint and notification need the same event. Topic lets you filter messages by routing key — we use it for delivery events so notification-service can subscribe to specific statuses like delivery.ASSIGNED or delivery.DELIVERED."
 
 ---
 
 ## Code Extracts for Professor Reference
 
-*(These are the real code snippets with exact file paths, to show during the presentation if needed.)*
+_(These are the real code snippets with exact file paths, to show during the presentation if needed.)_
 
 ### OpenFeign — Order calls Product (Synchronous)
 
@@ -906,12 +950,12 @@ public void receiveOrderEvent(OrderEventDTO event) {
 ```typescript
 // 📁 services/notification-service/src/rabbitmq.consumer.ts (line 76)
 
-this.channel.consume('ORDER_CREATED_NOTIFICATION_QUEUE', async (msg) => {
+this.channel.consume("ORDER_CREATED_NOTIFICATION_QUEUE", async (msg) => {
   const event = JSON.parse(msg.content.toString());
   await this.notificationService.create({
-    title: 'New Order Placed',
+    title: "New Order Placed",
     userId: String(event.clientId),
-    type: 'ORDER_CREATED',
+    type: "ORDER_CREATED",
   });
   this.channel.ack(msg);
   // 📥 ASYNCHRONOUS — receives from RabbitMQ, saves to MongoDB

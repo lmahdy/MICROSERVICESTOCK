@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 public class OrderEventDTO {
 
     private Long orderId;
-    private Long clientId;
+    private String clientId;
     private Long storeId;
     private BigDecimal totalAmount;
     private String status;
@@ -20,8 +20,8 @@ public class OrderEventDTO {
     public Long getOrderId() { return orderId; }
     public void setOrderId(Long orderId) { this.orderId = orderId; }
 
-    public Long getClientId() { return clientId; }
-    public void setClientId(Long clientId) { this.clientId = clientId; }
+    public String getClientId() { return clientId; }
+    public void setClientId(String clientId) { this.clientId = clientId; }
 
     public Long getStoreId() { return storeId; }
     public void setStoreId(Long storeId) { this.storeId = storeId; }
