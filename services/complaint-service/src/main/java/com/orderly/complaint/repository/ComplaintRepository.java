@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
-    List<Complaint> findByClientId(Long clientId);
+    List<Complaint> findByClientId(String clientId);
     List<Complaint> findByOrderId(Long orderId);
     List<Complaint> findByStatus(ComplaintStatus status);
 }

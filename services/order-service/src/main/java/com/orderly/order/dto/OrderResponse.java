@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 public class OrderResponse {
     Long id;
-    Long clientId;
+    String clientId;
     Long storeId;
     BigDecimal totalAmount;
     String deliveryAddress;

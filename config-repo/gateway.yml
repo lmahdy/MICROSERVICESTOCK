@@ -48,6 +48,12 @@ spring:
               - OPTIONS
             allowCredentials: true
         add-to-simple-url-handler-mapping: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/orderly
+
 server:
   port: 9016
 

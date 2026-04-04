@@ -14,11 +14,9 @@ management:
     health:
       show-details: ALWAYS
 
-# Security resource server (TEMPORARILY DISABLED FOR TESTING)
-# TODO: Re-enable when Keycloak is running on port 8081
-#spring:
-#  security:
-#    oauth2:
-#      resourceserver:
-#        jwt:
-#          issuer-uri: http://localhost:8081/realms/orderly
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/orderly

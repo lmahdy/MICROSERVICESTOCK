@@ -11,8 +11,8 @@ import java.time.Instant;
 public class DeliveryResponse {
     Long id;
     Long orderId;
-    Long courierId;
-    Long clientId;
+    String courierId;
+    String clientId;
     DeliveryStatus status;
     String estimatedTime;
     String notes;

@@ -27,7 +27,7 @@ public class DeliveryController {
     public DeliveryResponse one(@PathVariable Long id) { return service.findById(id); }
 
     @GetMapping("/courier/{courierId}")
-    public List<DeliveryResponse> byCourier(@PathVariable Long courierId) { return service.findByCourier(courierId); }
+    public List<DeliveryResponse> byCourier(@PathVariable String courierId) { return service.findByCourier(courierId); }
 
     @GetMapping("/order/{orderId}")
     public List<DeliveryResponse> byOrder(@PathVariable Long orderId) { return service.findByOrder(orderId); }

@@ -31,7 +31,7 @@ public class OrderController {
     }
 
     @GetMapping("/client/{clientId}")
-    public List<OrderResponse> byClient(@PathVariable Long clientId) {
+    public List<OrderResponse> byClient(@PathVariable String clientId) {
         return orderService.findByClient(clientId);
     }
 

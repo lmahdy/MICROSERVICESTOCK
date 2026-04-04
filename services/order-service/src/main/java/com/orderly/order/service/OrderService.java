@@ -50,7 +50,7 @@ public class OrderService {
         return OrderMapper.toResponse(order);
     }
 
-    public List<OrderResponse> findByClient(Long clientId) {
+    public List<OrderResponse> findByClient(String clientId) {
         return repository.findByClientId(clientId).stream().map(OrderMapper::toResponse).toList();
     }
 

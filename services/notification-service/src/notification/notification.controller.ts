@@ -1,10 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateNotificationDto, UpdateNotificationDto } from './dto';
 import { NotificationService } from './notification.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('notifications')
 @Controller('/api/notifications')
+@UseGuards(JwtAuthGuard)
 export class NotificationController {
   constructor(private service: NotificationService) { }
 

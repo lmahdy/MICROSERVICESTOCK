@@ -31,7 +31,7 @@ export class ApiService {
 
   // ── Orders ─────────────────────────────────────────────
   getOrders(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/orders`); }
-  getOrdersByClient(clientId: number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/orders/client/${clientId}`); }
+  getOrdersByClient(clientId: string | number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/orders/client/${clientId}`); }
   createOrder(body: any): Observable<any> { return this.http.post<any>(`${G}/api/orders`, body); }
   updateOrderStatus(id: number, status: string): Observable<any> {
     return this.http.patch<any>(`${G}/api/orders/${id}/status/${status}`, null);
@@ -40,7 +40,7 @@ export class ApiService {
   // ── Deliveries ─────────────────────────────────────────
   getDeliveries(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/deliveries`); }
   getDeliveryByOrder(orderId: number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/deliveries/order/${orderId}`); }
-  getDeliveriesByCourier(courierId: number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/deliveries/courier/${courierId}`); }
+  getDeliveriesByCourier(courierId: string | number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/deliveries/courier/${courierId}`); }
   createDelivery(body: any): Observable<any> { return this.http.post<any>(`${G}/api/deliveries`, body); }
   updateDeliveryStatus(id: number, status: string): Observable<any> {
     return this.http.patch<any>(`${G}/api/deliveries/${id}/status/${status}`, null);
@@ -55,8 +55,8 @@ export class ApiService {
 
   // ── Notifications ──────────────────────────────────────
   getNotifications(): Observable<any[]> { return this.http.get<any[]>(`${G}/api/notifications`); }
-  getNotificationsByUser(userId: number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/notifications/user/${userId}`); }
-  getUnreadCount(userId: number): Observable<any> { return this.http.get<any>(`${G}/api/notifications/user/${userId}/unread-count`); }
+  getNotificationsByUser(userId: string | number): Observable<any[]> { return this.http.get<any[]>(`${G}/api/notifications/user/${userId}`); }
+  getUnreadCount(userId: string | number): Observable<any> { return this.http.get<any>(`${G}/api/notifications/user/${userId}/unread-count`); }
   markNotificationRead(id: string): Observable<any> { return this.http.patch<any>(`${G}/api/notifications/${id}/read`, null); }
-  markAllRead(userId: number): Observable<any> { return this.http.patch<any>(`${G}/api/notifications/user/${userId}/read-all`, null); }
+  markAllRead(userId: string | number): Observable<any> { return this.http.patch<any>(`${G}/api/notifications/user/${userId}/read-all`, null); }
 }

@@ -11,7 +11,7 @@ import java.time.Instant;
 public class ComplaintResponse {
     Long id;
     Long orderId;
-    Long clientId;
+    String clientId;
     String description;
     ComplaintStatus status;
     String response;

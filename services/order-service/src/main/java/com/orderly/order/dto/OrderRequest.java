@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 public class OrderRequest {
     @NotNull
-    private Long clientId;
+    private String clientId;
     @NotNull
     private Long storeId;
     /** Delivery address for the order */
