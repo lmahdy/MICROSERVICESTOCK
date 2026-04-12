@@ -1,0 +1,10 @@
+server:
+  port: 8087
+
+notification:
+  mongo: mongodb://mongodb:27017/orderly_notifications
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery:8761/eureka

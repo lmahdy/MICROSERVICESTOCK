@@ -1,0 +1,14 @@
+*** Begin Patch
+*** Update File: D:\0asfaromaima\CandidatMS\pom.xml
+@@
+-        <dependency>-->
+-           <groupId>org.springframework.cloud</groupId>-->
+-          <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>-->
+-        </dependency>-->
++        <!--
++        <dependency>
++            <groupId>org.springframework.cloud</groupId>
++            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
++        </dependency>
++        -->
+*** End Patch

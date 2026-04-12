@@ -1,0 +1,144 @@
+{
+  "realm": "orderly",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": false,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CLIENT",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "LIVREUR",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "default-roles-orderly",
+        "description": "${role_default-roles}",
+        "composite": true,
+        "composites": {
+          "realm": ["offline_access", "uma_authorization", "CLIENT"]
+        },
+        "clientRole": false
+      },
+      {
+        "name": "offline_access",
+        "description": "${role_offline-access}",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "uma_authorization",
+        "description": "${role_uma_authorization}",
+        "composite": false,
+        "clientRole": false
+      }
+    ]
+  },
+  "defaultRole": {
+    "name": "default-roles-orderly",
+    "composite": true,
+    "composites": {
+      "realm": ["offline_access", "uma_authorization", "CLIENT"]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "orderly-frontend",
+      "name": "Orderly Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:4200",
+      "redirectUris": ["http://localhost:4200/*", "http://localhost:80/*", "http://localhost/*"],
+      "webOrigins": ["*"],
+      "protocol": "openid-connect",
+      "frontchannelLogout": true,
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:4200/*"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "admin1",
+      "firstName": "mahdi",
+      "lastName": "mzoughi",
+      "email": "mahdimzoughi4420@gmail.com",
+      "enabled": true,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ADMIN", "default-roles-orderly"]
+    },
+    {
+      "username": "admin@orderly.tn",
+      "firstName": "admin",
+      "lastName": "orderly",
+      "email": "admin@orderly.tn",
+      "enabled": true,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ADMIN", "default-roles-orderly"]
+    },
+    {
+      "username": "client1",
+      "firstName": "Mahdi",
+      "lastName": "Mzoughi",
+      "email": "mahdi.mzoughi@istic.ucar.tn",
+      "enabled": true,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "client",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["CLIENT", "default-roles-orderly"]
+    },
+    {
+      "username": "delivery1",
+      "enabled": true,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "delivery",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["LIVREUR", "default-roles-orderly"]
+    }
+  ]
+}

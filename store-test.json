@@ -1,0 +1,8 @@
+{
+    "name": "Pizza Paradise",
+    "description": "Best pizza in town",
+    "address": "123 Main St",
+    "phone": "+21671234567",
+    "openingHours": "9AM-11PM",
+    "rating": 5
+}

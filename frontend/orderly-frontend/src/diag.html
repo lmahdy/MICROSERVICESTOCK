@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head><title>Auth Diagnostic</title>
+<style>
+body{font-family:monospace;margin:20px;background:#111;color:#0f0}
+pre{background:#1a1a1a;padding:12px;border:1px solid #333;overflow-x:auto;white-space:pre-wrap}
+.fail{color:#f44}.pass{color:#0f0}.warn{color:#ff0}
+h2{border-bottom:1px solid #333;padding-bottom:4px}
+button{background:#333;color:#0f0;border:1px solid #0f0;padding:8px 16px;cursor:pointer;font-family:monospace;margin:4px}
+button:hover{background:#0f0;color:#111}
+</style>
+</head>
+<body>
+<h1>🔍 Browser Auth Diagnostic</h1>
+<p>This page runs IN YOUR BROWSER to diagnose the JWT mismatch.</p>
+<button onclick="runDiagnostic()">▶ Run Full Diagnostic</button>
+<button onclick="forceLogout()">🔄 Force Logout + Re-login</button>
+<div id="output"></div>
+
+<script>
+const KC_URL = 'http://localhost:9090';
+const KC_REALM = 'orderly';
+const KC_CLIENT = 'orderly-frontend';
+const GATEWAY = 'http://localhost:9016';
+const JWK_URL = KC_URL + '/realms/' + KC_REALM + '/protocol/openid-connect/certs';
+
+function log(html) {
+  document.getElementById('output').innerHTML += html + '\n';
+}
+
+function decodeJwtPart(part) {
+  try {
+    const padded = part.replace(/-/g,'+').replace(/_/g,'/');
+    return JSON.parse(atob(padded));
+  } catch(e) { return null; }
+}
+
+async function runDiagnostic() {
+  const out = document.getElementById('output');
+  out.innerHTML = '<pre>';
+
+  log('<h2>Step 1: Fetch JWK keys from Keycloak</h2>');
+  let jwkKeys = [];
+  try {
+    const resp = await fetch(JWK_URL);
+    const jwk = await resp.json();
+    jwkKeys = jwk.keys || [];
+    for (const k of jwkKeys) {
+      log(`  kid: ${k.kid}  use: ${k.use}  alg: ${k.alg}`);
+    }
+    const sigKids = jwkKeys.filter(k => k.use === 'sig').map(k => k.kid);
+    log(`\n  <span class="pass">Active signing kid(s): ${sigKids.join(', ')}</span>`);
+  } catch(e) {
+    log(`  <span class="fail">ERROR fetching JWK: ${e.message}</span>`);
+  }
+
+  log('<h2>Step 2: Check browser Keycloak session</h2>');
+
+  // Check for tokens in sessionStorage / localStorage
+  let foundToken = null;
+  for (const storage of [sessionStorage, localStorage]) {
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      const val = storage.getItem(key);
+      if (val && val.startsWith('eyJ')) {
+        log(`  Found JWT-like value in ${storage === sessionStorage ? 'sessionStorage' : 'localStorage'} key: "${key}"`);
+        foundToken = val;
+      }
+      if (key.toLowerCase().includes('kc') || key.toLowerCase().includes('keycloak')) {
+        log(`  Keycloak-related key: "${key}" = "${val ? val.substring(0,80) : ''}..."`);
+      }
+    }
+  }
+
+  // Check cookies for Keycloak
+  const cookies = document.cookie.split(';').map(c => c.trim());
+  const kcCookies = cookies.filter(c =>
+    c.toLowerCase().includes('kc') ||
+    c.toLowerCase().includes('keycloak') ||
+    c.toLowerCase().includes('auth_session')
+  );
+  if (kcCookies.length) {
+    log(`  Keycloak cookies found: ${kcCookies.length}`);
+    kcCookies.forEach(c => log(`    ${c.substring(0,80)}`));
+  } else {
+    log('  No Keycloak cookies visible to this page');
+  }
+
+  log('<h2>Step 3: Try to get token via Authorization Code flow (silent)</h2>');
+  log('  Loading keycloak-js...');
+
+  // Dynamically load keycloak-js
+  try {
+    const kc = new Promise((resolve, reject) => {
+      // Try to get token by doing a hidden iframe / fetch to the token endpoint
+      // Actually, let's just redirect approach - check if we can get code
+
+      // Simplest: try the existing app's approach
+      log('  Attempting silent auth check via redirect...');
+
+      // We'll use the token endpoint with a technique:
+      // Make a request to the auth endpoint with prompt=none in a hidden iframe
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      const state = 'diag_' + Math.random().toString(36).substr(2);
+      const redirectUri = encodeURIComponent(window.location.origin + '/diag-callback.html');
+      const authUrl = `${KC_URL}/realms/${KC_REALM}/protocol/openid-connect/auth?client_id=${KC_CLIENT}&redirect_uri=${redirectUri}&response_type=code&scope=openid&prompt=none&state=${state}`;
+
+      iframe.src = authUrl;
+      document.body.appendChild(iframe);
+
+      // This won't work directly for capturing the code, so let's try another approach
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        log('  <span class="warn">Silent auth via iframe not easily captured. Check main app flow.</span>');
+        resolve(null);
+      }, 3000);
+    });
+    await kc;
+  } catch(e) {
+    log(`  <span class="warn">Silent check: ${e.message}</span>`);
+  }
+
+  log('<h2>Step 4: Inspect token from main app (if accessible)</h2>');
+  log('  Checking if the main Angular app shared any token...');
+
+  // Try to access the opener or parent window
+  if (window.opener) {
+    log('  window.opener exists');
+  }
+
+  log('<h2>Step 5: Manual token test</h2>');
+  log('  Paste your browser token below to analyze it.');
+  log('  (Copy from DevTools Network tab → failing request → Authorization header)');
+  out.innerHTML += '</pre>';
+  out.innerHTML += '<textarea id="tokenInput" rows="4" cols="100" placeholder="Paste Bearer token here (just the eyJ... part)" style="background:#1a1a1a;color:#0f0;border:1px solid #333;font-family:monospace;width:95%"></textarea>';
+  out.innerHTML += '<br><button onclick="analyzeToken()">🔬 Analyze Pasted Token</button>';
+  out.innerHTML += '<div id="tokenAnalysis"></div>';
+}
+
+async function analyzeToken() {
+  const ta = document.getElementById('tokenAnalysis');
+  ta.innerHTML = '<pre>';
+  const raw = document.getElementById('tokenInput').value.trim().replace('Bearer ','');
+
+  if (!raw || !raw.startsWith('eyJ')) {
+    ta.innerHTML += '<span class="fail">Invalid token. Must start with eyJ...</span></pre>';
+    return;
+  }
+
+  const parts = raw.split('.');
+  if (parts.length !== 3) {
+    ta.innerHTML += '<span class="fail">Token does not have 3 parts (not a valid JWT)</span></pre>';
+    return;
+  }
+
+  const header = decodeJwtPart(parts[0]);
+  const payload = decodeJwtPart(parts[1]);
+
+  ta.innerHTML += '<h2>Token Header</h2>';
+  ta.innerHTML += JSON.stringify(header, null, 2);
+
+  ta.innerHTML += '\n<h2>Token Payload (key fields)</h2>';
+  ta.innerHTML += `  kid: ${header ? header.kid : '?'}\n`;
+  ta.innerHTML += `  alg: ${header ? header.alg : '?'}\n`;
+  ta.innerHTML += `  iss: ${payload ? payload.iss : '?'}\n`;
+  ta.innerHTML += `  azp: ${payload ? payload.azp : '?'}\n`;
+  ta.innerHTML += `  sub: ${payload ? payload.sub : '?'}\n`;
+  ta.innerHTML += `  exp: ${payload ? payload.exp : '?'} (${payload ? new Date(payload.exp * 1000).toISOString() : '?'})\n`;
+  ta.innerHTML += `  iat: ${payload ? payload.iat : '?'} (${payload ? new Date(payload.iat * 1000).toISOString() : '?'})\n`;
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (payload && payload.exp) {
+    if (payload.exp < nowSec) {
+      ta.innerHTML += `\n  <span class="fail">⚠ TOKEN IS EXPIRED (expired ${nowSec - payload.exp}s ago)</span>\n`;
+    } else {
+      ta.innerHTML += `\n  <span class="pass">✓ Token not yet expired (${payload.exp - nowSec}s remaining)</span>\n`;
+    }
+  }
+
+  // Now compare kid against JWK
+  ta.innerHTML += '\n<h2>JWK Key Comparison</h2>';
+  try {
+    const resp = await fetch(JWK_URL);
+    const jwk = await resp.json();
+    const sigKeys = jwk.keys.filter(k => k.use === 'sig');
+    const sigKids = sigKeys.map(k => k.kid);
+
+    ta.innerHTML += `  Current Keycloak sig kid(s): ${sigKids.join(', ')}\n`;
+    ta.innerHTML += `  Browser token kid: ${header ? header.kid : '?'}\n\n`;
+
+    if (header && sigKids.includes(header.kid)) {
+      ta.innerHTML += `  <span class="pass">✓ MATCH — browser token kid EXISTS in current JWK set</span>\n`;
+      ta.innerHTML += `  The token signature CAN be verified. Issue is elsewhere.\n`;
+    } else {
+      ta.innerHTML += `  <span class="fail">✗ MISMATCH — browser token kid NOT in current JWK set!</span>\n`;
+      ta.innerHTML += `  <span class="fail">This is the root cause of 401 invalid_token.</span>\n`;
+      ta.innerHTML += `  <span class="warn">The browser has a token signed with old Keycloak keys.</span>\n`;
+      ta.innerHTML += `  <span class="warn">Click "Force Logout + Re-login" to fix this.</span>\n`;
+    }
+  } catch(e) {
+    ta.innerHTML += `  <span class="fail">Could not fetch JWK: ${e.message}</span>\n`;
+  }
+
+  // Test the token against gateway
+  ta.innerHTML += '\n<h2>Gateway Test</h2>';
+  try {
+    const apiResp = await fetch(GATEWAY + '/api/stores', {
+      headers: { 'Authorization': 'Bearer ' + raw }
+    });
+    ta.innerHTML += `  GET /api/stores => HTTP ${apiResp.status}\n`;
+    if (apiResp.ok) {
+      const data = await apiResp.json();
+      ta.innerHTML += `  <span class="pass">✓ SUCCESS — ${data.length} stores returned</span>\n`;
+    } else {
+      const wwwAuth = apiResp.headers.get('www-authenticate') || '';
+      ta.innerHTML += `  <span class="fail">✗ FAILED — ${wwwAuth}</span>\n`;
+    }
+  } catch(e) {
+    ta.innerHTML += `  <span class="fail">Network error: ${e.message}</span>\n`;
+  }
+
+  ta.innerHTML += '</pre>';
+}
+
+function forceLogout() {
+  // Clear all storage
+  sessionStorage.clear();
+  localStorage.clear();
+
+  // Redirect to Keycloak logout which clears SSO session,
+  // then redirect back to the main app which will force fresh login
+  const logoutUrl = `${KC_URL}/realms/${KC_REALM}/protocol/openid-connect/logout?client_id=${KC_CLIENT}&post_logout_redirect_uri=${encodeURIComponent('http://localhost:4200/')}`;
+
+  document.getElementById('output').innerHTML =
+    '<pre><span class="warn">Clearing session and redirecting to Keycloak logout...</span>\n' +
+    'You will be redirected to login page.\n' +
+    'After login, you will get FRESH tokens with current keys.\n' +
+    'Redirecting in 2 seconds...</pre>';
+
+  setTimeout(() => {
+    window.location.href = logoutUrl;
+  }, 2000);
+}
+</script>
+</body>
+</html>

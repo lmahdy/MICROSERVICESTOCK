@@ -1,0 +1,2 @@
+@echo off
+curl -X GET http://localhost:8090/api/users

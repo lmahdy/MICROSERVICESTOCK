@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS orderly_users;
+CREATE DATABASE IF NOT EXISTS orderly_complaint;
+CREATE DATABASE IF NOT EXISTS orderly_delivery;
